@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ListingStatus {
+  PENDING_PAYMENT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  EXPIRED
+}
+
+model Listing {
+  id              String        @id @default(cuid())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  tokenName       String
+  ticker          String
+  contractAddress String        @unique
+  description     String
+  website         String?
+  twitter         String?
+  telegram        String?
+  dexUrl          String?
+  logoUrl         String?
+  bannerUrl       String?
+  chain           String        @default("TON")
+  holders         Int           @default(0)
+  volume24hTon    Float         @default(0)
+  ageDays         Int           @default(0)
+  verified        Boolean       @default(false)
+  featured        Boolean       @default(false)
+  trending        Boolean       @default(false)
+  status          ListingStatus @default(PENDING_PAYMENT)
+  ownerName       String?
+  ownerTelegram   String?
+  paymentMemo     String?
+  planId          String?
+
+  orders Order[]
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  listingId       String
+  listing         Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  amountTon       Float
+  currency        String      @default("TON")
+  status          OrderStatus @default(PENDING)
+  paymentWallet   String
+  paymentMemo     String
+  txHash          String?
+  customerTgId    String?
+}
+
+model Plan {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  priceTon     Float
+  durationDays Int
+  sortOrder    Int      @default(0)
+  features     Json
+}
